@@ -11,6 +11,9 @@ connectDB();
 
 const app = express();
 
+// Static Folder for Uploaded Images
+app.use('/uploads', express.static('uploads'));
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -19,9 +22,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/businesses', businessRoutes);
-
-// Static Folder for Uploaded Images
-app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
