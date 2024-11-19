@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-
+import API from "../services/api";
 import logo from "../assets/dealsdray logo.png"; // Adjust this to the correct path
 
 // Fullscreen container
@@ -44,6 +44,25 @@ const FormBox = styled(Box)({
 });
 
 const Login = () => {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await API.post("/auth/login", formData);
+      alert(response.data.message);
+      // Save the token to localStorage or state management
+      localStorage.setItem("token", response.data.token);
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("Login failed");
+    }
+  };
+
   return (
     <StyledContainer>
       <LoginBox>
@@ -68,22 +87,30 @@ const Login = () => {
               flexDirection: "column",
               gap: 2,
             }}
+            onSubmit={handleSubmit}
           >
             <TextField
               label="Email Address"
               type="email"
+              name="email"
               variant="outlined"
               fullWidth
+              value={formData.email}
+              onChange={handleChange}
             />
             <TextField
               label="Password"
               type="password"
+              name="password"
               variant="outlined"
               fullWidth
+              value={formData.password}
+              onChange={handleChange}
             />
             <Button
               variant="contained"
               fullWidth
+              type="submit"
               sx={{
                 backgroundColor: "#ec2127",
                 padding: "10px",

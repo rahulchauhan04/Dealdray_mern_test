@@ -11,15 +11,9 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const Header = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [role, setRole] = React.useState("Admin"); // Default role
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
-
-  const handleRoleChange = (newRole) => {
-    setRole(newRole);
-    handleMenuClose();
-  };
 
   return (
     <Box
@@ -46,8 +40,7 @@ const Header = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={() => handleRoleChange("Admin")}>Admin</MenuItem>
-          <MenuItem onClick={() => handleRoleChange("User")}>User</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
         </Menu>
       </Box>
     </Box>

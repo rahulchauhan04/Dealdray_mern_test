@@ -5,6 +5,7 @@ import Users from "./pages/Users";
 import Businesses from "./pages/Businesses";
 import AddUser from "./pages/AddUser";
 import AddBusiness from "./pages/AddBusiness";
+import AddSubUser from "./pages/AddSubUser";
 import SuperAdminPanel from "./pages/SuperAdminPanel";
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
         <Route path="/businesses" element={<Businesses />} />
         <Route path="/add-user" element={<AddUser />} />
         <Route path="/add-business" element={<AddBusiness />} />
+        <Route path="/add-subuser" element={<AddSubUser />} />
       </Routes>
     </Router>
   );

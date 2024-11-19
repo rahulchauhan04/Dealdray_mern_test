@@ -6,11 +6,31 @@ import TableSection from "../components/TableSection";
 
 const SuperAdminPanel = () => {
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#f9f9f9" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#f9f9f9",
+        overflow: "hidden",
+      }}
+    >
       <Sidebar />
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Header />
-        <Box sx={{ padding: "20px" }}>
+        <Box
+          sx={{
+            flex: 1, // Ensures content below the header fills the remaining space
+            overflowY: "auto", // Allows scrolling for long table content
+            padding: "20px",
+            boxSizing: "border-box", // Consistent sizing
+          }}
+        >
           <TableSection />
         </Box>
       </Box>

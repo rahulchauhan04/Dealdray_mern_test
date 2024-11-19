@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   List,
@@ -7,46 +7,45 @@ import {
   ListItemIcon,
   IconButton,
   Typography,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import GroupIcon from '@mui/icons-material/Group';
-import LocationCityIcon from '@mui/icons-material/LocationCity';
-import MapIcon from '@mui/icons-material/Map';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import MenuIcon from '@mui/icons-material/Menu';
-import dealsdrayLogo from '../assets/dealsdray_horizontal_logo.png';
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
+import GroupIcon from "@mui/icons-material/Group";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
+import MapIcon from "@mui/icons-material/Map";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import MenuIcon from "@mui/icons-material/Menu";
+import dealsdrayLogo from "../assets/dealsdray_horizontal_logo.png";
 
 const SidebarContainer = styled(Box)(({ theme }) => ({
-  width: '250px',
+  width: "230px",
   backgroundColor: theme.palette.background.paper,
-  padding: theme.spacing(2),
   boxShadow: theme.shadows[1],
-  height: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
+  height: "100vh", // Sidebar spans full height
+  display: "flex",
+  flexDirection: "column",
 }));
 
 const Header = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: '20px',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: "20px",
 });
 
-const Logo = styled('img')({
-  width: '150px',
+const Logo = styled("img")({
+  width: "150px",
 });
 
 const StyledListItem = styled(ListItem)(({ theme, active }) => ({
-  '&:hover': {
-    backgroundColor: '#8dccf7',
-    transition: 'background-color 0ms', // Instant hover effect
+  "&:hover": {
+    backgroundColor: "#8dccf7",
+    transition: "background-color 0ms", // Instant hover effect
   },
-  backgroundColor: active ? '#8dccf7' : 'inherit',
-  transition: 'background-color 0ms', // Instant active effect
+  backgroundColor: active ? "#8dccf7" : "inherit",
+  transition: "background-color 0ms", // Instant active effect
 }));
 
 const Sidebar = () => {
@@ -56,15 +55,15 @@ const Sidebar = () => {
     setActiveItem(index);
   };
 
-  const menuItems = [{ text: 'Dashboard', icon: <DashboardIcon /> }];
+  const menuItems = [{ text: "Dashboard", icon: <DashboardIcon /> }];
   const pageItems = [
-    { text: 'Designations', icon: <BusinessCenterIcon /> },
-    { text: 'Departments', icon: <GroupIcon /> },
-    { text: 'Team Members', icon: <GroupIcon /> },
-    { text: 'States', icon: <LocationCityIcon /> },
-    { text: 'District', icon: <MapIcon /> },
-    { text: 'Pincode', icon: <LocalOfferIcon /> },
-    { text: 'Orders', icon: <ShoppingCartIcon /> },
+    { text: "Designations", icon: <BusinessCenterIcon /> },
+    { text: "Departments", icon: <GroupIcon /> },
+    { text: "Team Members", icon: <GroupIcon /> },
+    { text: "States", icon: <LocationCityIcon /> },
+    { text: "District", icon: <MapIcon /> },
+    { text: "Pincode", icon: <LocalOfferIcon /> },
+    { text: "Orders", icon: <ShoppingCartIcon /> },
   ];
 
   return (
@@ -75,11 +74,10 @@ const Sidebar = () => {
           <MenuIcon />
         </IconButton>
       </Header>
-
       {/* Menu Section */}
       <Typography
         variant="subtitle1"
-        sx={{ fontWeight: 'bold', marginBottom: 1, color: '#666' }}
+        sx={{ fontWeight: "bold", marginBottom: 1, color: "#666" }}
       >
         Menu
       </Typography>
@@ -96,11 +94,10 @@ const Sidebar = () => {
           </StyledListItem>
         ))}
       </List>
-
       {/* Pages Section */}
       <Typography
         variant="subtitle1"
-        sx={{ fontWeight: 'bold', marginTop: 2, marginBottom: 1, color: '#666' }}
+        sx={{ fontWeight: "bold", marginTop: 2, marginBottom: 1, color: "#666" }}
       >
         Pages
       </Typography>
