@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import CreateNewModal from "./CreateNewModal";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -14,6 +13,8 @@ import {
   IconButton,
   TextField,
 } from "@mui/material";
+import API from "../services/api";
+import CreateNewModal from "./CreateNewModal";
 import SearchIcon from "@mui/icons-material/Search";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import EditIcon from "@mui/icons-material/Edit";
@@ -22,58 +23,83 @@ import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 const TableSection = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedSubUser, setSelectedSubUser] = useState(null);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchSubUsers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await API.get("/super-admin/sub-users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('Fetched subusers:', response.data.subUsers); // Add this line
+        setRows(response.data.subUsers);
+      } catch (error) {
+        console.error("Error fetching subusers:", error.response?.data || error.message);
+      }
+    };
+
+    fetchSubUsers();
+  }, []);
+
+  const handleSelectAllClick = (event) => {
+    if (event.target.checked) {
+      const allRowIds = rows.map((row) => row._id);
+      setSelectedRows(allRowIds);
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  const handleRowCheckboxChange = (event, id) => {
+    if (event.target.checked) {
+      setSelectedRows((prevSelected) => [...prevSelected, id]);
+    } else {
+      setSelectedRows((prevSelected) => prevSelected.filter((rowId) => rowId !== id));
+    }
+  };
 
   const toggleModal = () => {
     setIsModalOpen((prev) => !prev);
   };
 
+  const handleNewEntry = (newSubUser) => {
+    setRows((prevRows) => [...prevRows, newSubUser]);
+  };
 
-  const rows = [
-    {
-      id: 1,
-      name: "CMT",
-      email: "2803202308@gmail.com",
-      mobile: "7348838564",
-      designation: "Checker",
-      department: "Category Management Team",
-      reportingHead: "Super Admin",
-      userType: "Checker",
-      referralCode: "C123",
-    },
-    {
-      id: 2,
-      name: "BOT Checker",
-      email: "2803202305@yopmail.com",
-      mobile: "7348838569",
-      designation: "Checker",
-      department: "Buyer Onboarding Team",
-      reportingHead: "Super Admin",
-      userType: "Checker",
-      referralCode: "B456",
-    },
-    {
-      id: 3,
-      name: "BOT Approval",
-      email: "2803202306@gmail.com",
-      mobile: "7348838566",
-      designation: "Approval",
-      department: "Buyer Onboarding Team",
-      reportingHead: "Super Admin",
-      userType: "Approval",
-      referralCode: "A789",
-    },
-    {
-      id: 4,
-      name: "Srikanth RM",
-      email: "rm@gmail.com",
-      mobile: "9875774576",
-      designation: "Checker",
-      department: "RM",
-      reportingHead: "Super Admin",
-      userType: "Checker",
-      referralCode: "R111",
-    },
-  ];
+  const handleEdit = (id) => {
+    const subUser = rows.find((row) => row._id === id);
+    setSelectedSubUser(subUser);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateEntry = (updatedSubUser) => {
+    setRows((prevRows) =>
+      prevRows.map((row) => (row._id === updatedSubUser._id ? updatedSubUser : row))
+    );
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await API.delete(`/super-admin/sub-users/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRows((prevRows) => prevRows.filter((row) => row._id !== id));
+      alert("Subuser deleted successfully");
+    } catch (error) {
+      console.error('Error deleting subuser:', error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error deleting subuser");
+    }
+  };
 
   return (
     <Box
@@ -215,15 +241,15 @@ const TableSection = () => {
           <Table>
             <TableHead sx={{ backgroundColor: "#37474f" }}>
               <TableRow>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#fff",
-                    fontWeight: "bold",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <Checkbox sx={{ color: "#fff" }} /> Select All
+                <TableCell padding="checkbox" align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
+                  <Checkbox
+                    indeterminate={
+                      selectedRows.length > 0 && selectedRows.length < rows.length
+                    }
+                    checked={rows.length > 0 && selectedRows.length === rows.length}
+                    onChange={handleSelectAllClick}
+                  />
+                  Select All
                 </TableCell>
                 <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
                   Record No
@@ -261,35 +287,53 @@ const TableSection = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Checkbox />
+              {rows.map((row, index) => (
+                <TableRow key={row._id}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedRows.includes(row._id)}
+                      onChange={(event) => handleRowCheckboxChange(event, row._id)}
+                    />
                   </TableCell>
-                  <TableCell align="center">{row.id}</TableCell>
-                  <TableCell>
+                  <TableCell align="center">{index + 1}</TableCell>
+                  <TableCell align="center">
                     <Avatar
-                      align="center"
+                      src={`http://localhost:5001/${row.image}`} // Update this line
                       sx={{
                         width: 60,
                         height: 60,
                         borderRadius: "5px",
+                        margin: "0 auto",
                       }}
                     />
                   </TableCell>
-                  <TableCell align="center">{row.name}</TableCell>
-                  <TableCell align="center">{row.email}</TableCell>
-                  <TableCell align="center">{row.mobile}</TableCell>
-                  <TableCell align="center">{row.designation}</TableCell>
-                  <TableCell align="center">{row.department}</TableCell>
-                  <TableCell align="center">{row.reportingHead}</TableCell>
-                  <TableCell align="center">{row.userType}</TableCell>
-                  <TableCell align="center">{row.referralCode}</TableCell>
+                  <TableCell align="center">{row.name || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.email || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.mobile || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.designation || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.department || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.reportingHead || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.userType || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.referralCode || 'N/A'}</TableCell>
                   <TableCell align="center">
-                    <IconButton sx={{ color: "red" }}>
+                    <IconButton onClick={() => handleEdit(row._id)} 
+                      sx={{
+                        color: "green",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 128, 0, 0.3)", // Light green background on hover
+                        },
+                      }}
+                    >
                       <EditIcon />
                     </IconButton>
-                    <IconButton sx={{ color: "green" }}>
+                    <IconButton onClick={() => handleDelete(row._id)}
+                      sx={{
+                        color: "red",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 0, 0, 0.1)", // Light red background on hover
+                        },
+                      }}
+                    >
                       <RadioButtonCheckedIcon />
                     </IconButton>
                   </TableCell>
@@ -299,7 +343,15 @@ const TableSection = () => {
           </Table>
         </Box>
       </Box>
-      <CreateNewModal open={isModalOpen} handleClose={toggleModal} />
+      <CreateNewModal open={isModalOpen} handleClose={toggleModal} onNewEntry={handleNewEntry} />
+      {isEditModalOpen && selectedSubUser && (
+        <CreateNewModal
+          open={isEditModalOpen}
+          handleClose={() => setIsEditModalOpen(false)}
+          onUpdateEntry={handleUpdateEntry}
+          subUser={selectedSubUser}
+        />
+      )}
     </Box>
   );
 };

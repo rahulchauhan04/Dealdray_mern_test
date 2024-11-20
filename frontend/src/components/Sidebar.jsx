@@ -7,6 +7,7 @@ import {
   ListItemIcon,
   IconButton,
   Typography,
+  MenuItem,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -18,6 +19,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MenuIcon from "@mui/icons-material/Menu";
 import dealsdrayLogo from "../assets/dealsdray_horizontal_logo.png";
+import { useNavigate } from "react-router-dom";
 
 const SidebarContainer = styled(Box)(({ theme }) => ({
   width: "230px",
@@ -39,23 +41,38 @@ const Logo = styled("img")({
   width: "150px",
 });
 
-const StyledListItem = styled(ListItem)(({ theme, active }) => ({
+const StyledListItem = styled(ListItem, {
+  shouldForwardProp: (prop) => prop !== "button",
+})(({ theme }) => ({
   "&:hover": {
     backgroundColor: "#8dccf7",
-    transition: "background-color 0ms", // Instant hover effect
+    transition: "background-color 0ms",
   },
-  backgroundColor: active ? "#8dccf7" : "inherit",
-  transition: "background-color 0ms", // Instant active effect
+  "&.Mui-selected": {
+    backgroundColor: "#8dccf7",
+    transition: "background-color 0ms",
+  },
+  transition: "background-color 0ms",
 }));
 
 const Sidebar = () => {
   const [activeItem, setActiveItem] = useState(null);
+  const navigate = useNavigate();
 
-  const handleListItemClick = (index) => {
+  const handleListItemClick = (index, path) => {
     setActiveItem(index);
+    navigate(path);
   };
 
-  const menuItems = [{ text: "Dashboard", icon: <DashboardIcon /> }];
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    navigate("/login");
+  };
+
+  const menuItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+  ];
   const pageItems = [
     { text: "Designations", icon: <BusinessCenterIcon /> },
     { text: "Departments", icon: <GroupIcon /> },
@@ -81,13 +98,14 @@ const Sidebar = () => {
       >
         Menu
       </Typography>
+      {/* Menu Items */}
       <List>
         {menuItems.map((item, index) => (
           <StyledListItem
             button
             key={index}
-            active={activeItem === index}
-            onClick={() => handleListItemClick(index)}
+            selected={activeItem === index}
+            onClick={() => handleListItemClick(index, item.path)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
@@ -101,18 +119,20 @@ const Sidebar = () => {
       >
         Pages
       </Typography>
+      {/* Page Items */}
       <List>
         {pageItems.map((item, index) => (
           <StyledListItem
             button
             key={index + menuItems.length}
-            active={activeItem === index + menuItems.length}
+            selected={activeItem === index + menuItems.length}
             onClick={() => handleListItemClick(index + menuItems.length)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </StyledListItem>
         ))}
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </List>
     </SidebarContainer>
   );

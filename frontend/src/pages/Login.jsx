@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import logo from "../assets/dealsdray logo.png"; // Adjust this to the correct path
 
@@ -45,6 +46,7 @@ const FormBox = styled(Box)({
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,12 +55,28 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await API.post("/auth/login", formData);
+      // First, try to login as SuperAdmin
+      let response;
+      try {
+        response = await API.post("/auth/login", formData);
+      } catch (error) {
+        // If SuperAdmin login fails, try to login as SubUser
+        response = await API.post("/auth/sub-user-login", formData);
+      }
+
       alert(response.data.message);
-      // Save the token to localStorage or state management
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.user.role);
+
+      if (response.data.user.role === "SuperAdmin") {
+        navigate("/super-admin-panel");
+      } else if (response.data.user.role === "BOT Checker") {
+        navigate("/bot-checker-panel");
+      } else if (response.data.user.role === "BOT Approval Agent") {
+        navigate("/bot-approval-panel");
+      }
     } catch (error) {
-      console.error("Error logging in:", error);
+      console.error("Error logging in:", error.response?.data || error.message);
       alert("Login failed");
     }
   };
@@ -72,8 +90,7 @@ const Login = () => {
         {/* Right Form Section */}
         <FormBox>
           <Typography
-            variant=""
-            TextField
+            variant="h5"
             align="center"
             gutterBottom
             sx={{ fontWeight: "semi-bold", fontSize: "29px" }}

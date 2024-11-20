@@ -6,7 +6,7 @@ const AddSubUser = () => {
     name: "",
     email: "",
     role: "BOT Checker",
-    password: "dealsdray",
+    password: "dealsdray", // Consider allowing password setup by admin
   });
 
   const handleChange = (e) => {
@@ -16,13 +16,19 @@ const AddSubUser = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("superAdminToken");
+      if (!token) {
+        alert("No authentication token found. Please log in.");
+        return;
+      }
+
       await API.post("/super-admin/sub-users", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("SubUser created successfully");
     } catch (error) {
-      console.error("Error creating subuser:", error);
+      console.error("Error creating subuser:", error.response?.data || error.message);
+      alert(error.response?.data.message || "Error creating subuser");
     }
   };
 

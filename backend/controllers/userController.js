@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import User from '../models/User.js'; // Ensure this path is correct
 
 // Get All Users
 export const getUsers = async (req, res) => {

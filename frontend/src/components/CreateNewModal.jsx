@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,9 +12,14 @@ import {
   FormControl,
   InputLabel,
   Select,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import API from "../services/api"; // Ensure you have an API service set up
 
-const CreateNewModal = ({ open, handleClose }) => {
+// Add 'onNewEntry' and 'onUpdateEntry' to the props
+const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser }) => {
   const [formData, setFormData] = useState({
     department: "",
     email: "",
@@ -36,19 +41,86 @@ const CreateNewModal = ({ open, handleClose }) => {
     address: "",
     referralType: "",
     image: null,
+    name: "",
+    role: "",
+    userType: "",
+    referralCode: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+  useEffect(() => {
+    if (subUser) {
+      setFormData({
+        department: subUser.department || "",
+        email: subUser.email || "",
+        mobile: subUser.mobile || "",
+        reportingHead: subUser.reportingHead || "",
+        pinCode: subUser.pinCode || "",
+        state: subUser.state || "",
+        townArea: subUser.townArea || "",
+        displayName: subUser.displayName || "",
+        otherReportingHead: subUser.otherReportingHead || "",
+        deactivationTime: subUser.deactivationTime || "",
+        assignmentRule: subUser.assignmentRule || "",
+        teamMemberName: subUser.teamMemberName || "",
+        password: subUser.password || "",
+        designation: subUser.designation || "",
+        userHierarchy: subUser.userHierarchy || "",
+        city: subUser.city || "",
+        location: subUser.location || "",
+        address: subUser.address || "",
+        referralType: subUser.referralType || "",
+        image: subUser.image || null,
+        name: subUser.name || "",
+        role: subUser.role || "",
+        userType: subUser.userType || "",
+        referralCode: subUser.referralCode || "",
+      });
+    }
+  }, [subUser]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    // For file inputs
+    if (event.target.type === 'file') {
+      setFormData({
+        ...formData,
+        [name]: event.target.files[0],
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
-  const handleSubmit = () => {
-    console.log(formData); // Handle form submission logic here
-    handleClose();
+  const handleSubmit = async () => {
+    console.log('Form Data:', formData); // Add this line
+    try {
+      const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+      if (subUser) {
+        // Editing existing subuser
+        const response = await API.put(`/super-admin/sub-users/${subUser._id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        onUpdateEntry(response.data.subUser);
+        alert("User updated successfully");
+      } else {
+        // Creating new subuser
+        const response = await API.post("/super-admin/sub-users", formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        onNewEntry(response.data.subUser);
+        alert("User created successfully");
+      }
+
+      // Close the modal
+      handleClose();
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error creating subuser");
+    }
   };
 
   return (
@@ -85,7 +157,7 @@ const CreateNewModal = ({ open, handleClose }) => {
               color: "#5994d7",
             }}
           >
-            CREATE TEAM MEMBER MASTER
+            {subUser ? "EDIT TEAM MEMBER" : "CREATE TEAM MEMBER"}
           </Typography>
           <Box>
             <Button
@@ -152,8 +224,7 @@ const CreateNewModal = ({ open, handleClose }) => {
               required
             >
               <MenuItem value="">Select Option</MenuItem>
-              <MenuItem value="Admin">Admin</MenuItem>
-              <MenuItem value="Manager">Manager</MenuItem>
+              <MenuItem value="Supervisor">Supervisor</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -246,8 +317,10 @@ const CreateNewModal = ({ open, handleClose }) => {
               onChange={handleChange}
               required
             >
-              <MenuItem value="">Select Option</MenuItem>
-              <MenuItem value="Checker">Checker</MenuItem>
+              <MenuItem value="">Select Designation</MenuItem>
+              <MenuItem value="Manager">Manager</MenuItem>
+              <MenuItem value="Executive">Executive</MenuItem>
+              {/* Add other options as needed */}
             </Select>
           </FormControl>
           <FormControl fullWidth>
@@ -311,6 +384,49 @@ const CreateNewModal = ({ open, handleClose }) => {
               accept="image/*"
             />
           </Button>
+          <TextField
+            fullWidth
+            name="name"
+            label="Team Member Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+          <FormControl fullWidth>
+            <InputLabel>Role</InputLabel>
+            <Select
+              value={formData.role}
+              onChange={handleChange}
+              required
+              inputProps={{
+                name: 'role',
+              }}
+            >
+              <MenuItem value="">Select Role</MenuItem>
+              <MenuItem value="BOT Checker">BOT Checker</MenuItem>
+              <MenuItem value="BOT Approval Agent">BOT Approval Agent</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl fullWidth>
+            <InputLabel>User Type</InputLabel>
+            <Select
+              name="userType"
+              value={formData.userType}
+              onChange={handleChange}
+            >
+              <MenuItem value="">Select User Type</MenuItem>
+              <MenuItem value="Admin">Admin</MenuItem>
+              <MenuItem value="Regular">Regular</MenuItem>
+              {/* Add other options as needed */}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            name="referralCode"
+            label="Referral Code"
+            value={formData.referralCode}
+            onChange={handleChange}
+          />
         </Box>
       </Box>
     </Modal>
