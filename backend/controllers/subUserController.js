@@ -1,8 +1,6 @@
 import axios from 'axios';
 import Buyer from '../models/Buyer.js';
 
-// ...existing code...
-
 export const getBuyerRegistrations = async (req, res) => {
   try {
     // Pagination parameters
@@ -31,40 +29,42 @@ export const getBuyerRegistrations = async (req, res) => {
 };
 
 export const approveBuyerRegistration = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    // Update the buyer registration status to 'Approved'
-    await axios.patch(`https://external-api.com/buyer-registrations/${id}`, {
-      status: 'Approved',
-    }, {
-      headers: {
-        Authorization: `Bearer ${req.token}`, // Assuming the token is passed in the request
-      },
-    });
+    const { id } = req.params;
 
-    // Return a success message
-    res.status(200).json({ message: 'Buyer registration approved successfully' });
+    const buyer = await Buyer.findById(id);
+
+    if (!buyer) {
+      return res.status(404).json({ message: 'Buyer not found' });
+    }
+
+    buyer.status = 'Approved';
+    buyer.approvedBy = req.user._id;
+    buyer.approvalDate = Date.now();
+    await buyer.save();
+
+    res.status(200).json({ message: 'Buyer registration approved', buyer });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 export const rejectBuyerRegistration = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    // Update the buyer registration status to 'Rejected'
-    await axios.patch(`https://external-api.com/buyer-registrations/${id}`, {
-      status: 'Rejected',
-    }, {
-      headers: {
-        Authorization: `Bearer ${req.token}`, // Assuming the token is passed in the request
-      },
-    });
+    const { id } = req.params;
 
-    // Return a success message
-    res.status(200).json({ message: 'Buyer registration rejected successfully' });
+    const buyer = await Buyer.findById(id);
+
+    if (!buyer) {
+      return res.status(404).json({ message: 'Buyer not found' });
+    }
+
+    buyer.status = 'Rejected';
+    buyer.rejectedBy = req.user._id;
+    buyer.rejectionDate = Date.now();
+    await buyer.save();
+
+    res.status(200).json({ message: 'Buyer registration rejected', buyer });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

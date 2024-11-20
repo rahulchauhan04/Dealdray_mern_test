@@ -1,19 +1,29 @@
 import express from 'express';
-import { getBuyerRegistrations, approveBuyerRegistration, rejectBuyerRegistration } from '../controllers/subUserController.js';
-import { authenticateSubUser } from '../middleware/authMiddleware.js';
+import {
+  getBuyerRegistrations,
+  approveBuyerRegistration,
+  rejectBuyerRegistration,
+} from '../controllers/subUserController.js';
+import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Apply authentication middleware
-router.use(authenticateSubUser);
+// Apply authentication middleware to protect all routes in this router
+router.use(protect);
 
-// Route to get buyer registrations
+// Apply role-based authorization to allow only 'BOT Checker' and 'BOT Approval Agent'
+router.use(authorizeRoles('BOT Checker', 'BOT Approval Agent'));
+
+// Define the route to get buyer registrations
 router.get('/buyer-registrations', getBuyerRegistrations);
 
-// POST /api/sub-users/buyer-registrations/:id/approve
+// Define the route to approve a buyer registration
 router.post('/buyer-registrations/:id/approve', approveBuyerRegistration);
 
-// POST /api/sub-users/buyer-registrations/:id/reject
+// Define the route to reject a buyer registration
 router.post('/buyer-registrations/:id/reject', rejectBuyerRegistration);
+
+// Define the route to get bot checker registrations
+router.get('/bot-checker/registrations', getBuyerRegistrations);
 
 export default router;

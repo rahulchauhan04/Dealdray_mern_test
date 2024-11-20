@@ -1,7 +1,8 @@
 import express from 'express';
-import { getUsers, createUser, updateUser, deleteUser } from '/Users/rahul/Developer/backend/backend/controllers/userController.js';
+import { getUsers, createUser, updateUser, deleteUser } from '../controllers/userController.js';
 
 const router = express.Router();
+console.log('User Routes Loaded'); // Debug log
 
 router.get('/', getUsers);
 router.post('/', createUser);

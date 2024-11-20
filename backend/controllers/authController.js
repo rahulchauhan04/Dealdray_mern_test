@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import SuperAdmin from '../models/SuperAdmin.js';
 import SubUser from '../models/SubUser.js';
 import jwt from 'jsonwebtoken';
@@ -28,13 +31,13 @@ export const loginSuperAdmin = async (req, res) => {
     const token = jwt.sign(
       { id: superAdmin._id },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
-    console.log('Login successful, token generated'); // Debug log
+    console.log('Login successful, token generated:', token); // Debug log
 
     // Return the token and a success message
-    return res.status(200).json({ token, message: 'Login successful' });
+    return res.status(200).json({ token, user: { role: 'SuperAdmin' }, message: 'Login successful' });
   } catch (error) {
     console.error('Login Error:', error.message); // Debug log
     return res.status(500).json({ message: error.message });
@@ -61,12 +64,22 @@ export const loginSubUser = async (req, res) => {
     const token = jwt.sign(
       { id: subUser._id },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
+    // Prepare user data without the password
+    const userData = {
+      _id: subUser._id,
+      name: subUser.name,
+      email: subUser.email,
+      role: subUser.role,
+      __v: subUser.__v,
+    };
+
     // Return the token and user details
-    res.status(200).json({ token, user: subUser });
+    res.status(200).json({ token, user: userData });
   } catch (error) {
+    console.error('SubUser Login Error:', error.message);
     res.status(500).json({ message: error.message });
   }
 };

@@ -3,9 +3,16 @@ import bcrypt from 'bcrypt';
 
 const subUserSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  department: String,
   email: { type: String, required: true, unique: true },
+  mobile: String,
+  reportingHead: String,
   role: { type: String, required: true, enum: ['BOT Checker', 'BOT Approval Agent'] },
-  password: { type: String, required: true, default: 'dealsdray' },
+  password: { type: String, required: true },
+  // Add these fields
+  designation: String,
+  userType: String,
+  referralCode: String,
 });
 
 // Pre-save hook to hash the password

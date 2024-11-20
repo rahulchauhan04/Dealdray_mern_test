@@ -8,13 +8,14 @@ import businessRoutes from './routes/businessRoutes.js'; // Ensure this path is 
 import authRoutes from './routes/authRoutes.js';
 import superAdminRoutes from './routes/superAdminRoutes.js';
 import subUserRoutes from './routes/subUserRoutes.js'; // Ensure this path is correct
+import buyerRoutes from './routes/buyerRoutes.js'; // Import Buyer Routes
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-// Static Folder for Uploaded Images
+// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static('uploads'));
 
 // Middleware
@@ -26,8 +27,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/users', userRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/subusers', superAdminRoutes);
-app.use('/api/sub-users', subUserRoutes); // Use the '/sub-users' route prefix
+app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/sub-users', subUserRoutes);
+app.use('/api/buyers', buyerRoutes); // Use Buyer Routes
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
