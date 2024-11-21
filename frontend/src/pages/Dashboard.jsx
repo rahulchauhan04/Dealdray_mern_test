@@ -13,6 +13,17 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+
+  const handleCardClick = (path) => {
+    if (role === "BOT Checker") {
+      navigate("/bot-checker-panel");
+    } else if (role === "BOT Approval Agent") {
+      navigate("/bot-approval-panel");
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <Box
@@ -42,7 +53,7 @@ const Dashboard = () => {
               transform: "scale(1.05)",
             },
           }}
-          onClick={() => navigate("/super-admin-panel")}
+          onClick={() => handleCardClick("/super-admin-panel")}
           elevation={3}
         >
           <CardActionArea>
@@ -63,7 +74,7 @@ const Dashboard = () => {
               transform: "scale(1.05)",
             },
           }}
-          onClick={() => navigate("/bot-checker-panel")}
+          onClick={() => handleCardClick("/bot-checker-panel")}
           elevation={3}
         >
           <CardActionArea>
@@ -84,7 +95,7 @@ const Dashboard = () => {
               transform: "scale(1.05)",
             },
           }}
-          onClick={() => navigate("/bot-approval-panel")}
+          onClick={() => handleCardClick("/bot-approval-panel")}
           elevation={3}
         >
           <CardActionArea>

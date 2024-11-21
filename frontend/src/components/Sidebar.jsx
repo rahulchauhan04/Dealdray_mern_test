@@ -55,13 +55,19 @@ const StyledListItem = styled(ListItem, {
   transition: "background-color 0ms",
 }));
 
-const Sidebar = () => {
+const Sidebar = ({ role }) => {
   const [activeItem, setActiveItem] = useState(null);
   const navigate = useNavigate();
 
   const handleListItemClick = (index, path) => {
     setActiveItem(index);
-    navigate(path);
+    if (role === "BOT Checker" && path === "/dashboard") {
+      navigate("/bot-checker-panel");
+    } else if (role === "BOT Approval Agent" && path === "/dashboard") {
+      navigate("/bot-approval-panel");
+    } else {
+      navigate(path);
+    }
   };
 
   const handleLogout = () => {
@@ -71,17 +77,37 @@ const Sidebar = () => {
   };
 
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+    {
+      text: "Dashboard",
+      icon: <DashboardIcon />,
+      path: "/dashboard",
+    },
   ];
-  const pageItems = [
-    { text: "Designations", icon: <BusinessCenterIcon /> },
-    { text: "Departments", icon: <GroupIcon /> },
-    { text: "Team Members", icon: <GroupIcon /> },
-    { text: "States", icon: <LocationCityIcon /> },
-    { text: "District", icon: <MapIcon /> },
-    { text: "Pincode", icon: <LocalOfferIcon /> },
-    { text: "Orders", icon: <ShoppingCartIcon /> },
-  ];
+
+  const pageItems =
+    role === "SuperAdmin"
+      ? [
+          { text: "Designations", icon: <BusinessCenterIcon />, path: "/designations" },
+          { text: "Departments", icon: <GroupIcon />, path: "/departments" },
+          { text: "Team Members", icon: <GroupIcon />, path: "/team-members" },
+          { text: "States", icon: <LocationCityIcon />, path: "/states" },
+          { text: "District", icon: <MapIcon />, path: "/district" },
+          { text: "Pincode", icon: <LocalOfferIcon />, path: "/pincode" },
+          { text: "Orders", icon: <ShoppingCartIcon />, path: "/orders" },
+        ]
+      : role === "BOT Checker"
+      ? [
+          { text: "New Registrations", icon: <GroupIcon />, path: "/bot-checker-panel" },
+          { text: "Checking Pending", icon: <BusinessCenterIcon />, path: "/checking-pending" },
+          { text: "Processed With Pendency", icon: <MapIcon />, path: "/processed-with-pendency" },
+          { text: "Incomplete Registrations", icon: <GroupIcon />, path: "/incomplete-registrations" },
+        ]
+      : role === "BOT Approval Agent"
+      ? [
+          { text: "Pending Approval", icon: <GroupIcon />, path: "/pending-approval" },
+          { text: "Deleted Registrations", icon: <BusinessCenterIcon />, path: "/deleted-registrations" },
+        ]
+      : [];
 
   return (
     <SidebarContainer>
@@ -91,14 +117,12 @@ const Sidebar = () => {
           <MenuIcon />
         </IconButton>
       </Header>
-      {/* Menu Section */}
       <Typography
         variant="subtitle1"
         sx={{ fontWeight: "bold", marginBottom: 1, color: "#666" }}
       >
         Menu
       </Typography>
-      {/* Menu Items */}
       <List>
         {menuItems.map((item, index) => (
           <StyledListItem
@@ -106,34 +130,38 @@ const Sidebar = () => {
             key={index}
             selected={activeItem === index}
             onClick={() => handleListItemClick(index, item.path)}
+            sx={{
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "#8dccf7",
+              },
+            }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </StyledListItem>
         ))}
       </List>
-      {/* Pages Section */}
       <Typography
         variant="subtitle1"
         sx={{ fontWeight: "bold", marginTop: 2, marginBottom: 1, color: "#666" }}
       >
         Pages
       </Typography>
-      {/* Page Items */}
       <List>
         {pageItems.map((item, index) => (
           <StyledListItem
             button
             key={index + menuItems.length}
             selected={activeItem === index + menuItems.length}
-            onClick={() => handleListItemClick(index + menuItems.length)}
+            onClick={() => handleListItemClick(index + menuItems.length, item.path)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </StyledListItem>
         ))}
-        <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </List>
+      <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </SidebarContainer>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   Box,
   Button,
@@ -12,81 +13,78 @@ import {
   FormControl,
   InputLabel,
   Select,
-  IconButton,
+  Avatar,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import API from "../services/api"; // Ensure you have an API service set up
 
-// Add 'onNewEntry' and 'onUpdateEntry' to the props
-const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser }) => {
-  const [formData, setFormData] = useState({
-    department: "",
-    email: "",
-    mobile: "",
-    reportingHead: "",
-    pinCode: "",
-    state: "",
-    townArea: "",
-    displayName: "",
-    otherReportingHead: "",
-    deactivationTime: "",
-    assignmentRule: "",
-    teamMemberName: "",
-    password: "",
-    designation: "",
-    userHierarchy: "",
-    city: "",
-    location: "",
-    address: "",
-    referralType: "",
-    image: null,
-    name: "",
-    role: "",
-    userType: "",
-    referralCode: "",
-  });
+const initialFormData = {
+  department: "",
+  email: "",
+  mobile: "",
+  reportingHead: "",
+  pinCode: "",
+  state: "",
+  townArea: "",
+  displayName: "",
+  otherReportingHead: "",
+  deactivationTime: "",
+  assignmentRule: "",
+  teamMemberName: "",
+  password: "",
+  designation: "",
+  userHierarchy: "",
+  city: "",
+  location: "",
+  address: "",
+  referralType: "",
+  image: null,
+  name: "",
+};
+
+const CreateNewModal = ({ open, handleClose, subUser, refreshSubUsers, onNewEntry, onUpdateEntry }) => {
+  const [formData, setFormData] = useState(initialFormData);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     if (subUser) {
+      // Editing mode: populate formData with subUser data
       setFormData({
-        department: subUser.department || "",
-        email: subUser.email || "",
-        mobile: subUser.mobile || "",
-        reportingHead: subUser.reportingHead || "",
-        pinCode: subUser.pinCode || "",
-        state: subUser.state || "",
-        townArea: subUser.townArea || "",
-        displayName: subUser.displayName || "",
-        otherReportingHead: subUser.otherReportingHead || "",
-        deactivationTime: subUser.deactivationTime || "",
-        assignmentRule: subUser.assignmentRule || "",
-        teamMemberName: subUser.teamMemberName || "",
-        password: subUser.password || "",
-        designation: subUser.designation || "",
-        userHierarchy: subUser.userHierarchy || "",
-        city: subUser.city || "",
-        location: subUser.location || "",
-        address: subUser.address || "",
-        referralType: subUser.referralType || "",
-        image: subUser.image || null,
-        name: subUser.name || "",
-        role: subUser.role || "",
-        userType: subUser.userType || "",
-        referralCode: subUser.referralCode || "",
+        ...initialFormData,
+        ...subUser,
+        deactivationTime: subUser.deactivationTime.string, // Set deactivationTime to the string value
+         // Reset image to null to avoid conflicts
       });
+      setImagePreview(subUser.image || null);
+    } else {
+      // Creating mode: reset formData
+      setFormData(initialFormData);
+      setImagePreview(null);
     }
   }, [subUser]);
+
+  useEffect(() => {
+    if (!open) {
+      // Modal is closed, reset form data
+      setFormData(initialFormData);
+      setImagePreview(null);
+    }
+  }, [open]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
 
     // For file inputs
     if (event.target.type === 'file') {
-      setFormData({
-        ...formData,
-        [name]: event.target.files[0],
-      });
+      const file = event.target.files[0];
+      if (file && file.type.match('image.*')) {
+        setFormData({
+          ...formData,
+          [name]: file,
+        });
+        setImagePreview(URL.createObjectURL(file));
+      } else {
+        alert('Please select a valid image file (jpg, jpeg, png).');
+      }
     } else {
       setFormData({
         ...formData,
@@ -95,36 +93,109 @@ const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser 
     }
   };
 
+  const generateReferralCode = () => {
+    return `REF-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const formDataToSend = new FormData();
+
+      // Ensure deactivationTime is correctly formatted
+      if (typeof formData.deactivationTime === 'string') {
+        formDataToSend.append("deactivationTime", formData.deactivationTime);
+      } else if (typeof formData.deactivationTime === 'object') {
+        formDataToSend.append("deactivationTime", formData.deactivationTime.string);
+      }
+
+      // Append other form data
+      for (const key in formData) {
+        if (key !== "deactivationTime") {
+          formDataToSend.append(key, formData[key]);
+        }
+      }
+
+      const response = await API.put(`/super-admin/sub-users/${subUser._id}`, formDataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log("Updated SubUser:", response.data.subUser); // Debug log
+      alert("Subuser updated successfully");
+      onUpdateEntry(response.data.subUser); // Trigger parent update
+      handleClose(); // Close modal
+    } catch (error) {
+      console.error("Error updating subuser:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error updating subuser");
+    }
+  };
+
   const handleSubmit = async () => {
     console.log('Form Data:', formData); // Add this line
     try {
       const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+      const formDataToSend = new FormData();
+      for (const key in formData) {
+        formDataToSend.append(key, formData[key]);
+      }
+
+      // Generate referral code
+      formDataToSend.append("referralCode", generateReferralCode());
+
+      // Ensure deactivationTime is sent as "7 days"
+      formDataToSend.append("deactivationTime", "7 days");
+
       if (subUser) {
         // Editing existing subuser
-        const response = await API.put(`/super-admin/sub-users/${subUser._id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await API.put(`/super-admin/sub-users/${subUser._id}`, formDataToSend, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
         });
         onUpdateEntry(response.data.subUser);
         alert("User updated successfully");
       } else {
         // Creating new subuser
-        const response = await API.post("/super-admin/sub-users", formData, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await API.post("/super-admin/sub-users", formDataToSend, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
         });
         onNewEntry(response.data.subUser);
         alert("User created successfully");
       }
 
+      // Refresh the subuser list
+      if (refreshSubUsers) {
+        refreshSubUsers();
+      } else {
+        console.error("refreshSubUsers is not defined");
+      }
+
+      // Reset form data and image preview
+      setFormData(initialFormData);
+      setImagePreview(null);
+
       // Close the modal
-      handleClose();
+      handleModalClose();
+
+      alert("Subuser created successfully");
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
       alert(error.response?.data?.message || "Error creating subuser");
     }
   };
 
+  const handleModalClose = () => {
+    // Reset form data and image preview
+    setFormData(initialFormData);
+    setImagePreview(null);
+
+    // Close the modal
+    handleClose();
+  };
+
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleModalClose}>
       <Box
         sx={{
           position: "absolute",
@@ -164,12 +235,12 @@ const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser 
               variant="contained"
               color="error"
               sx={{ mr: 2 }}
-              onClick={handleClose}
+              onClick={handleModalClose}
             >
               Back to List
             </Button>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
-              Submit
+            <Button variant="contained" color="primary" onClick={subUser ? handleSave : handleSubmit}>
+              {subUser ? "Save" : "Submit"}
             </Button>
           </Box>
         </Box>
@@ -287,11 +358,10 @@ const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser 
               onChange={handleChange}
             >
               <MenuItem value="">Select Option</MenuItem>
-              <MenuItem value="Rule 1">Rule 1</MenuItem>
+              <MenuItem value="Round Robin">Round Robin</MenuItem>
+              <MenuItem value="All Record Assign">All Record Assign</MenuItem>
             </Select>
           </FormControl>
-
-          {/* Right Column */}
           <TextField
             fullWidth
             name="teamMemberName"
@@ -329,9 +399,11 @@ const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser 
               name="userHierarchy"
               value={formData.userHierarchy}
               onChange={handleChange}
+              required
             >
               <MenuItem value="">Select Option</MenuItem>
-              <MenuItem value="Level 1">Level 1</MenuItem>
+              <MenuItem value="BOT Checker">BOT Checker</MenuItem>
+              <MenuItem value="BOT Approval Agent">BOT Approval Agent</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -384,53 +456,29 @@ const CreateNewModal = ({ open, handleClose, onNewEntry, onUpdateEntry, subUser 
               accept="image/*"
             />
           </Button>
+          {imagePreview && (
+            <Avatar
+              src={imagePreview}
+              alt="Image Preview"
+              sx={{ width: 100, height: 100, mt: 2 }}
+            />
+          )}
           <TextField
             fullWidth
             name="name"
-            label="Team Member Name"
+            label="Name"
             value={formData.name}
             onChange={handleChange}
             required
-          />
-          <FormControl fullWidth>
-            <InputLabel>Role</InputLabel>
-            <Select
-              value={formData.role}
-              onChange={handleChange}
-              required
-              inputProps={{
-                name: 'role',
-              }}
-            >
-              <MenuItem value="">Select Role</MenuItem>
-              <MenuItem value="BOT Checker">BOT Checker</MenuItem>
-              <MenuItem value="BOT Approval Agent">BOT Approval Agent</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>User Type</InputLabel>
-            <Select
-              name="userType"
-              value={formData.userType}
-              onChange={handleChange}
-            >
-              <MenuItem value="">Select User Type</MenuItem>
-              <MenuItem value="Admin">Admin</MenuItem>
-              <MenuItem value="Regular">Regular</MenuItem>
-              {/* Add other options as needed */}
-            </Select>
-          </FormControl>
-          <TextField
-            fullWidth
-            name="referralCode"
-            label="Referral Code"
-            value={formData.referralCode}
-            onChange={handleChange}
           />
         </Box>
       </Box>
     </Modal>
   );
+};
+
+CreateNewModal.propTypes = {
+  refreshSubUsers: PropTypes.func,
 };
 
 export default CreateNewModal;

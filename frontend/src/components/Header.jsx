@@ -10,7 +10,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+const Header = ({ role }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const navigate = useNavigate();
 
@@ -21,6 +21,19 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     navigate("/login");
+  };
+
+  const getPanelTitle = (role) => {
+    switch (role) {
+      case "SuperAdmin":
+        return "Super Admin Panel";
+      case "BOT Checker":
+        return "BOT Checker Panel";
+      case "BOT Approval Agent":
+        return "BOT Approval Panel";
+      default:
+        return "Admin Panel";
+    }
   };
 
   return (
@@ -35,11 +48,11 @@ const Header = () => {
       }}
     >
       <Typography variant="h6" color="grey">
-        Super Admin Panel
+        {getPanelTitle(role)}
       </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: "15px" }}>
         <Avatar sx={{ cursor: "pointer" }} />
-        <Typography>Hi - Super Admin</Typography>
+        <Typography>Hi - {role}</Typography>
         <IconButton onClick={handleMenuOpen}>
           <KeyboardArrowDownIcon />
         </IconButton>

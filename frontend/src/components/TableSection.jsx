@@ -28,23 +28,24 @@ const TableSection = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedSubUser, setSelectedSubUser] = useState(null);
 
-  // Fetch data on component mount
-  useEffect(() => {
-    const fetchSubUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await API.get("/super-admin/sub-users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log('Fetched subusers:', response.data.subUsers); // Add this line
-        setRows(response.data.subUsers);
-      } catch (error) {
-        console.error("Error fetching subusers:", error.response?.data || error.message);
-      }
-    };
+  // Function to fetch subusers from the backend
+  const fetchSubUsers = async () => {
+    console.log("Refreshing subuser list...");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await API.get("/super-admin/sub-users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRows(response.data.subUsers);
+    } catch (error) {
+      console.error("Error fetching subusers:", error.response?.data || error.message);
+    }
+  };
 
+  // Fetch subusers when the component mounts
+  useEffect(() => {
     fetchSubUsers();
   }, []);
 
@@ -73,13 +74,22 @@ const TableSection = () => {
     setRows((prevRows) => [...prevRows, newSubUser]);
   };
 
-  const handleEdit = (id) => {
-    const subUser = rows.find((row) => row._id === id);
-    setSelectedSubUser(subUser);
-    setIsEditModalOpen(true);
+  const handleEdit = async (subUserId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await API.get(`/super-admin/sub-users/${subUserId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSelectedSubUser(response.data); // Ensure all fields are included
+      setIsEditModalOpen(true); // Open modal
+    } catch (error) {
+      console.error("Error fetching subuser details:", error.response?.data || error.message);
+      alert("Unable to fetch subuser details.");
+    }
   };
 
   const handleUpdateEntry = (updatedSubUser) => {
+    console.log("Updating subuser:", updatedSubUser); // Debug log
     setRows((prevRows) =>
       prevRows.map((row) => (row._id === updatedSubUser._id ? updatedSubUser : row))
     );
@@ -159,8 +169,9 @@ const TableSection = () => {
                 marginRight: 1,
                 "&:hover": { backgroundColor: "#c61b20" },
               }}
+              onClick={toggleModal}
             >
-              Update Status
+              Create New
             </Button>
             <Button
               variant="contained"
@@ -182,19 +193,8 @@ const TableSection = () => {
                 "&:hover": { backgroundColor: "#c61b20" },
               }}
             >
-              Bulk Activate/Deactivate
+              Update Status
             </Button>
-            <Button
-               variant="contained"
-               sx={{
-               backgroundColor: "#ec2127",
-               color: "#fff",
-               "&:hover": { backgroundColor: "#c61b20" },
-               }}
-               onClick={toggleModal} 
-            >
-               Create New
-           </Button>
           </Box>
         </Box>
 
@@ -276,7 +276,7 @@ const TableSection = () => {
                   Reporting Head
                 </TableCell>
                 <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
-                  User Type
+                  Role
                 </TableCell>
                 <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
                   Referral Code
@@ -298,7 +298,7 @@ const TableSection = () => {
                   <TableCell align="center">{index + 1}</TableCell>
                   <TableCell align="center">
                     <Avatar
-                      src={`http://localhost:5001/${row.image}`} // Update this line
+                      src={row.image ? row.image : 'path/to/placeholder/image.jpg'} // Update this line
                       sx={{
                         width: 60,
                         height: 60,
@@ -313,7 +313,7 @@ const TableSection = () => {
                   <TableCell align="center">{row.designation || 'N/A'}</TableCell>
                   <TableCell align="center">{row.department || 'N/A'}</TableCell>
                   <TableCell align="center">{row.reportingHead || 'N/A'}</TableCell>
-                  <TableCell align="center">{row.userType || 'N/A'}</TableCell>
+                  <TableCell align="center">{row.role || 'N/A'}</TableCell>
                   <TableCell align="center">{row.referralCode || 'N/A'}</TableCell>
                   <TableCell align="center">
                     <IconButton onClick={() => handleEdit(row._id)} 
@@ -343,13 +343,21 @@ const TableSection = () => {
           </Table>
         </Box>
       </Box>
-      <CreateNewModal open={isModalOpen} handleClose={toggleModal} onNewEntry={handleNewEntry} />
+
+      <CreateNewModal
+        open={isModalOpen}
+        handleClose={toggleModal}
+        onNewEntry={handleNewEntry} // Pass the onNewEntry prop
+        refreshSubUsers={fetchSubUsers} // Pass the refreshSubUsers function
+      />
+
       {isEditModalOpen && selectedSubUser && (
         <CreateNewModal
           open={isEditModalOpen}
           handleClose={() => setIsEditModalOpen(false)}
           onUpdateEntry={handleUpdateEntry}
           subUser={selectedSubUser}
+          refreshSubUsers={fetchSubUsers} // Pass the function as a prop
         />
       )}
     </Box>

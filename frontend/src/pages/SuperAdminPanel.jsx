@@ -5,6 +5,8 @@ import Header from "../components/Header";
 import TableSection from "../components/TableSection";
 
 const SuperAdminPanel = () => {
+  const role = localStorage.getItem("role");
+
   return (
     <Box
       sx={{
@@ -14,7 +16,7 @@ const SuperAdminPanel = () => {
         overflow: "hidden",
       }}
     >
-      <Sidebar />
+      <Sidebar role={role} />
       <Box
         sx={{
           flex: 1,
@@ -22,7 +24,7 @@ const SuperAdminPanel = () => {
           flexDirection: "column",
         }}
       >
-        <Header />
+        <Header role={role} />
         <Box
           sx={{
             flex: 1, // Ensures content below the header fills the remaining space

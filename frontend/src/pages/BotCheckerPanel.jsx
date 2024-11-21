@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -12,12 +11,12 @@ import {
   IconButton,
   TextField,
 } from "@mui/material";
-import API from "../services/api";
 import SearchIcon from "@mui/icons-material/Search";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
+import API from "../services/api";
 
 const BotCheckerPanel = () => {
   const [rows, setRows] = useState([]);
@@ -26,28 +25,39 @@ const BotCheckerPanel = () => {
   const [role, setRole] = useState(""); // For dynamically updating the header and sidebar
 
   // Fetch data from API and user role
+  const fetchApprovedRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const userRole = localStorage.getItem("role"); // Fetch user role from localStorage
+      setRole(userRole); // Set role to dynamically update header/sidebar
+
+      const response = await API.get("/api/buyer-checker", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          approvalStatus: "Approved",
+        },
+      });
+      setRows(response.data.registrations || []);
+    } catch (error) {
+      console.error(
+        "Error fetching approved registrations:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
   useEffect(() => {
-    const fetchRegistrations = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const userRole = localStorage.getItem("role"); // Fetch user role from localStorage
-        setRole(userRole); // Set role to dynamically update header/sidebar
+    fetchApprovedRegistrations();
 
-        const response = await API.get("/api/sub-users/bot-checker/registrations", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setRows(response.data.registrations || []);
-      } catch (error) {
-        console.error(
-          "Error fetching registrations:",
-          error.response?.data || error.message
-        );
-      }
+    // Add event listener for manual refresh
+    window.addEventListener("refreshBotCheckerPanel", fetchApprovedRegistrations);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("refreshBotCheckerPanel", fetchApprovedRegistrations);
     };
-
-    fetchRegistrations();
   }, []);
 
   const handleSelectAllClick = (event) => {
@@ -121,7 +131,7 @@ const BotCheckerPanel = () => {
                 fontWeight: "bold",
               }}
             >
-              New Registration
+              Approved Registrations
             </Typography>
 
             {/* Search and Icons */}
