@@ -1,5 +1,5 @@
 import Buyer from '../models/Buyer.js';
-import { sendOTP, verifyOTP } from '../services/otpService.js'; // Corrected path
+import { sendOTP, verifyOTP } from '../services/otpService.js';
 import jwt from 'jsonwebtoken';
 
 const generateToken = (id) => {
@@ -14,31 +14,25 @@ export const loginBuyerWithOTP = async (req, res) => {
   console.log('Received phoneNumber:', phoneNumber); // Debug log
 
   try {
-    // Check if the buyer exists by mobile number
     let buyer = await Buyer.findOne({ mobile: phoneNumber });
 
     if (!buyer) {
-      // Create buyer with required fields
       buyer = new Buyer({
-        name: 'Default Name', // Replace with actual data if available
-        email: 'default@example.com', // Replace with actual data if available
+        name: 'Default Name',
+        email: 'default@example.com',
         mobile: phoneNumber,
         status: 'Pending',
       });
       await buyer.save();
 
-      // Send OTP to the new buyer
       await sendOTP(phoneNumber);
-
       return res.status(200).json({ message: 'OTP sent to new user', newUser: true });
     }
 
-    // Send OTP to existing user
     await sendOTP(phoneNumber);
-
     res.status(200).json({ message: 'OTP sent to existing user', newUser: false });
   } catch (error) {
-    console.error('Error in loginBuyerWithOTP:', error.message); // Debug log
+    console.error('Error in loginBuyerWithOTP:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -55,23 +49,62 @@ export const verifyBuyerOTP = async (req, res) => {
       return res.status(400).json({ message: verification.message });
     }
 
-    // Find the buyer
     const buyer = await Buyer.findOne({ mobile: phoneNumber });
 
     if (!buyer) {
       return res.status(404).json({ message: 'Buyer not found.' });
     }
 
-    // Update buyer status to 'Active' upon successful OTP verification
     buyer.status = 'Active';
     await buyer.save();
 
-    // Generate JWT token or perform login actions as needed
     const token = generateToken(buyer._id);
 
     return res.status(200).json({ message: 'OTP verified successfully.', token });
   } catch (error) {
-    console.error('Error in verifyBuyerOTP:', error.message); // Debug log
+    console.error('Error in verifyBuyerOTP:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const approveBuyer = async (req, res) => {
+  const { buyerId } = req.body;
+
+  try {
+    const buyer = await Buyer.findById(buyerId);
+
+    if (!buyer) {
+      return res.status(404).json({ message: 'Buyer not found' });
+    }
+
+    buyer.status = 'Approved';
+    await buyer.save();
+
+    res.status(200).json({ message: 'Buyer approved successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getPendingApprovals = async (req, res) => {
+  try {
+    const { approvalStatus } = req.query;
+    console.log('Approval Status:', approvalStatus); // Debug log
+
+    const buyers = await Buyer.find({ status: approvalStatus });
+    console.log('Buyers:', buyers); // Debug log
+    res.status(200).json({ registrations: buyers });
+  } catch (error) {
+    console.error('Error fetching pending approvals:', error.message); // Debug log
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getApprovedBuyers = async (req, res) => {
+  try {
+    const buyers = await Buyer.find({ status: 'Approved' });
+    res.status(200).json({ registrations: buyers });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

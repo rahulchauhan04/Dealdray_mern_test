@@ -3,16 +3,32 @@ import bcrypt from 'bcrypt';
 
 const subUserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  department: String,
+  department: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  mobile: String,
-  reportingHead: String,
-  role: { type: String, required: true, enum: ['BOT Checker', 'BOT Approval Agent'] },
+  mobile: { type: String, required: true },
+  reportingHead: { type: String },
+  pinCode: { type: String },
+  state: { type: String },
+  townArea: { type: String },
+  displayName: { type: String },
+  otherReportingHead: { type: String },
+  deactivationTime: {
+    type: Map, // To store both string and date
+    of: String, // String for 'days' and formatted date
+    default: {},
+  },
+  assignmentRule: { type: String },
+  teamMemberName: { type: String },
   password: { type: String, required: true },
-  // Add these fields
-  designation: String,
-  userType: String,
-  referralCode: String,
+  designation: { type: String, required: true },
+  userHierarchy: { type: String, required: true },
+  city: { type: String },
+  location: { type: String },
+  address: { type: String },
+  referralCode: { type: String },
+  image: { type: String, default: null },
+  referralType: { type: String, default: 'B2R' },
+  role: { type: String, required: true },
 });
 
 // Pre-save hook to hash the password

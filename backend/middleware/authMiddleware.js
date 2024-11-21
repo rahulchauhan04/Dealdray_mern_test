@@ -59,25 +59,14 @@ export const authenticateSubUser = async (req, res, next) => {
 export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer ')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      // Get token from header
       token = req.headers.authorization.split(' ')[1];
-      console.log('Extracted Token:', token); // Debug log
-
-      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('Decoded Token:', decoded); // Debug log
-
-      // Get user from token
       req.user = await SubUser.findById(decoded.id).select('-password');
       if (!req.user) {
         return res.status(401).json({ message: 'User not found' });
       }
-
       next();
     } catch (error) {
       console.error('Authentication error:', error);
@@ -90,10 +79,8 @@ export const protect = async (req, res, next) => {
 
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.superAdmin.role)) { // Adjusted to req.superAdmin
-      return res
-        .status(403)
-        .json({ message: `Role '${req.superAdmin.role}' not authorized` });
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: `Role '${req.user.role}' not authorized` });
     }
     next();
   };
