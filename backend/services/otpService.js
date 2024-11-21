@@ -7,17 +7,30 @@ dotenv.config();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const serviceSid = process.env.TWILIO_SERVICE_SID; // Optional: for Verify service
 
 const client = twilio(accountSid, authToken);
+
+export default client;
 
 // In-memory store for OTPs
 const otpStore = {};
 
+export const generateOTP = (phoneNumber) => {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
+
+  otpStore[formattedPhoneNumber] = {
+    otp,
+    expiresAt: Date.now() + 5 * 60 * 1000, // Expires in 5 minutes
+  };
+
+  return otp;
+};
+
 export const sendOTP = async (phoneNumber) => {
   try {
     // Generate a random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = generateOTP(phoneNumber);
 
     // Ensure phone number is in E.164 format
     const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
@@ -30,13 +43,6 @@ export const sendOTP = async (phoneNumber) => {
     });
 
     console.log(`OTP ${otp} sent to ${formattedPhoneNumber}`);
-
-    // Store OTP with expiration (e.g., 5 minutes)
-    otpStore[formattedPhoneNumber] = {
-      otp,
-      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes from now
-    };
-
   } catch (error) {
     console.error(`Failed to send OTP to ${phoneNumber}:`, error);
     throw new Error('Failed to send OTP');
