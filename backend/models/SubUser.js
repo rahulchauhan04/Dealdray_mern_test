@@ -29,6 +29,7 @@ const subUserSchema = new mongoose.Schema({
   image: { type: String, default: null },
   referralType: { type: String, default: 'B2R' },
   role: { type: String, required: true },
+  isActive: { type: Boolean, default: true }, // Ensure isActive field exists with default value
 });
 
 // Pre-save hook to hash the password
