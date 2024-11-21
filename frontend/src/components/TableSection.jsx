@@ -12,6 +12,7 @@ import {
   Typography,
   IconButton,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import API from "../services/api";
 import CreateNewModal from "./CreateNewModal";
@@ -108,6 +109,27 @@ const TableSection = () => {
     } catch (error) {
       console.error('Error deleting subuser:', error.response?.data || error.message);
       alert(error.response?.data?.message || "Error deleting subuser");
+    }
+  };
+
+  const handleToggleStatus = async (id) => {
+    console.log("Toggling status for user ID:", id); // Debug log
+    try {
+      const token = localStorage.getItem("token");
+      const response = await API.put(`/super-admin/sub-users/${id}/activate-deactivate`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Backend Response:", response.data); // Debug log
+      console.log("New status for user ID:", id, "isActive:", response.data.subUser.isActive); // Debug log
+      alert(response.data.message);
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          row._id === id ? { ...row, isActive: !row.isActive } : row
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling user status:", error.response?.data || error.message);
+      alert("Unable to toggle user status.");
     }
   };
 
@@ -326,16 +348,19 @@ const TableSection = () => {
                     >
                       <EditIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleDelete(row._id)}
-                      sx={{
-                        color: "red",
-                        "&:hover": {
-                          backgroundColor: "rgba(255, 0, 0, 0.1)", // Light red background on hover
-                        },
-                      }}
-                    >
-                      <RadioButtonCheckedIcon />
-                    </IconButton>
+                    <Tooltip title={row.isActive ? "Deactivate User" : "Activate User"}>
+                      <IconButton
+                        onClick={() => handleToggleStatus(row._id)}
+                        sx={{
+                          color: row.isActive ? "green" : "red",
+                          "&:hover": {
+                            backgroundColor: row.isActive ? "rgba(0, 128, 0, 0.2)" : "rgba(255, 0, 0, 0.2)",
+                          },
+                        }}
+                      >
+                        <RadioButtonCheckedIcon />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}

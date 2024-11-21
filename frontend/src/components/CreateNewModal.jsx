@@ -47,6 +47,10 @@ const CreateNewModal = ({ open, handleClose, subUser, refreshSubUsers, onNewEntr
 
   useEffect(() => {
     if (subUser) {
+      setFormData({ ...subUser, isActive: subUser.isActive });
+    }
+    
+    if (subUser) {
       // Editing mode: populate formData with subUser data
       setFormData({
         ...initialFormData,
