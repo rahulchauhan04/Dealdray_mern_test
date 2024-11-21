@@ -6,88 +6,101 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Checkbox,
   Typography,
-  IconButton,
-  TextField,
+  Button,
+  Paper,
+  Checkbox,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import GridOnIcon from "@mui/icons-material/GridOn";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import API from "../services/api";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
+const dummyData = [
+  {
+    recordNo: 1,
+    businessName: "N and N Store",
+    ownerName: "N and N Store",
+    mobile: "9634859637",
+    email: "ksmegha@yopmail.com",
+    location: "Bangalore, KARNATAKA",
+    registrationTimeline: "30/08/2024, 5:01:19 PM",
+    businessCategory: "Proprietary",
+    documentsStatus: "NO DOCUMENTS UPLOADED",
+    registeredBy: "Direct Registration",
+    geoLocation: "Brigade Metropolis, Bangalore",
+    deviceInfo: "realme, android",
+    deviceID: "UKQ1.230924.001",
+  },
+  // Add more dummy data as needed
+];
 
 const BotCheckerPanel = () => {
   const [rows, setRows] = useState([]);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [role, setRole] = useState(""); // For dynamically updating the header and sidebar
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch data from API and user role
-  const fetchApprovedRegistrations = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const userRole = localStorage.getItem("role"); // Fetch user role from localStorage
-      setRole(userRole); // Set role to dynamically update header/sidebar
+  useEffect(() => {
+    // Pagination logic for dummy data
+    const itemsPerPage = 10;
+    const totalItems = dummyData.length;
+    setTotalPages(Math.ceil(totalItems / itemsPerPage));
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setRows(dummyData.slice(startIndex, endIndex));
+  }, [page]);
 
-      const response = await API.get("/api/buyer-checker", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          approvalStatus: "Approved",
-        },
-      });
-      setRows(response.data.registrations || []);
-    } catch (error) {
-      console.error(
-        "Error fetching approved registrations:",
-        error.response?.data || error.message
-      );
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
     }
   };
 
-  useEffect(() => {
-    fetchApprovedRegistrations();
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
 
-    // Add event listener for manual refresh
-    window.addEventListener("refreshBotCheckerPanel", fetchApprovedRegistrations);
-
-    // Cleanup event listener on component unmount
-    return () => {
-      window.removeEventListener("refreshBotCheckerPanel", fetchApprovedRegistrations);
-    };
-  }, []);
-
-  const handleSelectAllClick = (event) => {
+  const handleSelectAll = (event) => {
     if (event.target.checked) {
-      const allRowIds = rows.map((row) => row._id);
-      setSelectedRows(allRowIds);
+      setSelectedRows(rows.map((row) => row.recordNo));
     } else {
       setSelectedRows([]);
     }
   };
 
-  const handleRowCheckboxChange = (event, id) => {
+  const handleSelectRow = (event, recordNo) => {
     if (event.target.checked) {
-      setSelectedRows((prevSelected) => [...prevSelected, id]);
+      setSelectedRows((prev) => [...prev, recordNo]);
     } else {
-      setSelectedRows((prevSelected) =>
-        prevSelected.filter((rowId) => rowId !== id)
-      );
+      setSelectedRows((prev) => prev.filter((id) => id !== recordNo));
     }
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#f9f9f9",
+        overflow: "hidden",
+      }}
+    >
       {/* Sidebar */}
-      <Sidebar role={role} /> {/* Pass the role dynamically */}
+      <Sidebar role={localStorage.getItem("role")} />
 
       {/* Main Content */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         {/* Header */}
-        <Header role={role} /> {/* Pass the role dynamically */}
+        <Header role={localStorage.getItem("role")} />
 
         {/* Breadcrumb Section */}
         <Typography
@@ -115,78 +128,18 @@ const BotCheckerPanel = () => {
             flexDirection: "column",
           }}
         >
-          {/* Header Section */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "20px",
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#5994d7",
-                fontWeight: "bold",
-              }}
-            >
-              Approved Registrations
-            </Typography>
-
-            {/* Search and Icons */}
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {searchOpen && (
-                <TextField
-                  placeholder="Search..."
-                  size="small"
-                  sx={{ backgroundColor: "#fff" }}
-                  InputProps={{
-                    startAdornment: (
-                      <SearchIcon
-                        sx={{ marginRight: 1, color: "rgba(0, 0, 0, 0.54)" }}
-                      />
-                    ),
-                  }}
-                />
-              )}
-              <IconButton onClick={() => setSearchOpen((prev) => !prev)}>
-                <SearchIcon />
-              </IconButton>
-              <IconButton>
-                <GridOnIcon />
-              </IconButton>
-            </Box>
-          </Box>
-
           {/* Table Section */}
-          <Box
+          <Paper
+            elevation={3}
             sx={{
               overflow: "auto",
-              backgroundColor: "#fff",
-              borderRadius: 1,
+              borderRadius: 2,
+              margin: 2,
             }}
           >
             <Table>
               <TableHead sx={{ backgroundColor: "#37474f" }}>
                 <TableRow>
-                  <TableCell
-                    padding="checkbox"
-                    align="center"
-                    sx={{ color: "#fff", fontWeight: "bold" }}
-                  >
-                    <Checkbox
-                      indeterminate={
-                        selectedRows.length > 0 &&
-                        selectedRows.length < rows.length
-                      }
-                      checked={
-                        rows.length > 0 && selectedRows.length === rows.length
-                      }
-                      onChange={handleSelectAllClick}
-                    />
-                    Select All
-                  </TableCell>
                   <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
                     Record No
                   </TableCell>
@@ -206,51 +159,94 @@ const BotCheckerPanel = () => {
                     Registered By
                   </TableCell>
                   <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
-                    View Details
+                    Actions
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.length > 0 ? (
-                  rows.map((row, index) => (
-                    <TableRow key={row._id}>
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={selectedRows.includes(row._id)}
-                          onChange={(event) =>
-                            handleRowCheckboxChange(event, row._id)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell align="center">{index + 1}</TableCell>
-                      <TableCell align="center">{row.businessDetails || "N/A"}</TableCell>
-                      <TableCell align="center">{row.registrationTimeline || "N/A"}</TableCell>
-                      <TableCell align="center">{row.businessCategory || "N/A"}</TableCell>
-                      <TableCell align="center">{row.documentsStatus || "N/A"}</TableCell>
-                      <TableCell align="center">{row.registeredBy || "N/A"}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          sx={{
-                            color: "#007bff",
-                            "&:hover": {
-                              backgroundColor: "rgba(0, 123, 255, 0.1)",
-                            },
-                          }}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center">
-                      No data found
+                {rows.map((row) => (
+                  <TableRow key={row.recordNo}>
+                    <TableCell align="center">{row.recordNo}</TableCell>
+                    <TableCell align="center">
+                      <Box>
+                        <Typography sx={{ fontWeight: "bold", color: "#007bff" }}>
+                          {row.businessName}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Owner Name: {row.ownerName}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Mobile: {row.mobile}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Email: {row.email}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Location: {row.location}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold", color: "#007bff" }}>
+                      {row.registrationTimeline}
+                    </TableCell>
+                    <TableCell align="center">{row.businessCategory}</TableCell>
+                    <TableCell align="center">
+                      <Typography
+                        sx={{
+                          fontSize: "14px",
+                          backgroundColor:
+                            row.documentsStatus === "NO DOCUMENTS UPLOADED"
+                              ? "#f44336"
+                              : "#4caf50",
+                          color: "#fff",
+                          padding: "5px",
+                          borderRadius: "5px",
+                          display: "inline-block",
+                        }}
+                      >
+                        {row.documentsStatus}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">{row.registeredBy}</TableCell>
+                    <TableCell align="center">
+                      <Button variant="contained" color="primary">
+                        View Details
+                      </Button>
                     </TableCell>
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
+          </Paper>
+
+          {/* Pagination Controls */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 2,
+            }}
+          >
+            <Button
+              onClick={handlePreviousPage}
+              disabled={page <= 1}
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+            >
+              Previous
+            </Button>
+            <Typography sx={{ margin: "0 10px", fontWeight: "bold" }}>
+              Page {page} of {totalPages}
+            </Typography>
+            <Button
+              onClick={handleNextPage}
+              disabled={page >= totalPages}
+              variant="outlined"
+              endIcon={<ArrowForwardIcon />}
+            >
+              Next
+            </Button>
           </Box>
         </Box>
       </Box>

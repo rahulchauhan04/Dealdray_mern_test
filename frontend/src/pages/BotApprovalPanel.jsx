@@ -7,68 +7,56 @@ import {
   TableHead,
   TableRow,
   Typography,
-  IconButton,
-  TextField,
   Button,
+  Paper,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import API from "../services/api";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
+const dummyData = [
+  {
+    recordNo: 1,
+    businessName: "N and N Store",
+    ownerName: "N and N Store",
+    mobile: "9634859637",
+    email: "ksmegha@yopmail.com",
+    location: "Bangalore, KARNATAKA",
+    registrationTimeline: "30/08/2024, 5:01:19 PM",
+    businessCategory: "Proprietary",
+    documentsStatus: "NO DOCUMENTS UPLOADED",
+    registeredBy: "Direct Registration",
+    geoLocation: "Brigade Metropolis, Bangalore",
+    deviceInfo: "realme, android",
+    deviceID: "UKQ1.230924.001",
+  },
+  // Add more dummy data as needed
+];
 
 const BotApprovalPanel = () => {
   const [rows, setRows] = useState([]);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchApprovals = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found. Please log in.");
-        }
-        const response = await API.get("/buyer-approvals", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            approvalStatus: "Pending Approval",
-          },
-        });
-        setRows(response.data.registrations || []);
-      } catch (error) {
-        console.error("Error fetching approvals:", error.response?.data || error.message);
-      }
-    };
+    const itemsPerPage = 10;
+    const totalItems = dummyData.length;
+    setTotalPages(Math.ceil(totalItems / itemsPerPage));
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setRows(dummyData.slice(startIndex, endIndex));
+  }, [page]);
 
-    fetchApprovals();
-  }, []);
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
 
-  const handleApprove = async (buyerId) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found. Please log in.");
-      }
-      await API.post(
-        "/buyer-approvals/approve",
-        { buyerId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setRows((prevRows) =>
-        prevRows.filter((row) => row._id !== buyerId)
-      );
-      alert("Buyer approved successfully");
-      // Trigger a refresh in the Bot Checker Panel
-      window.dispatchEvent(new Event("refreshBotCheckerPanel"));
-    } catch (error) {
-      console.error("Error approving buyer:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Error approving buyer");
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
     }
   };
 
@@ -121,53 +109,13 @@ const BotApprovalPanel = () => {
             flexDirection: "column",
           }}
         >
-          {/* Header Section */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "20px",
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#5994d7",
-                fontWeight: "bold",
-              }}
-            >
-              Pending Approvals
-            </Typography>
-
-            {/* Search and Icons */}
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {searchOpen && (
-                <TextField
-                  placeholder="Search..."
-                  size="small"
-                  sx={{ backgroundColor: "#fff" }}
-                  InputProps={{
-                    startAdornment: (
-                      <SearchIcon
-                        sx={{ marginRight: 1, color: "rgba(0, 0, 0, 0.54)" }}
-                      />
-                    ),
-                  }}
-                />
-              )}
-              <IconButton onClick={() => setSearchOpen((prev) => !prev)}>
-                <SearchIcon />
-              </IconButton>
-            </Box>
-          </Box>
-
           {/* Table Section */}
-          <Box
+          <Paper
+            elevation={3}
             sx={{
               overflow: "auto",
-              backgroundColor: "#fff",
-              borderRadius: 1,
+              borderRadius: 2,
+              margin: 2,
             }}
           >
             <Table>
@@ -194,73 +142,94 @@ const BotApprovalPanel = () => {
                   <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
                     View Details
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "#fff", fontWeight: "bold" }}>
-                    Actions
-                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.length > 0 ? (
-                  rows.map((row, index) => (
-                    <TableRow key={row._id}>
-                      <TableCell align="center">{index + 1}</TableCell>
-                      <TableCell align="center">
-                        <Box>
-                          <Typography
-                            sx={{ fontWeight: "bold", color: "#007bff" }}
-                          >
-                            {row.businessName || "N/A"}
-                          </Typography>
-                          <Typography sx={{ color: "#888" }}>
-                            Owner Name: {row.ownerName || "N/A"}
-                          </Typography>
-                          <Typography sx={{ color: "#888" }}>
-                            Mobile: {row.mobile || "N/A"}
-                          </Typography>
-                          <Typography sx={{ color: "#888" }}>
-                            Email: {row.email || "N/A"}
-                          </Typography>
-                          <Typography sx={{ color: "#888" }}>
-                            Location: {row.location || "N/A"}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">{row.registrationTimeline || "N/A"}</TableCell>
-                      <TableCell align="center">{row.businessCategory || "N/A"}</TableCell>
-                      <TableCell align="center">{row.documentsStatus || "N/A"}</TableCell>
-                      <TableCell align="center">{row.registeredBy || "N/A"}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          sx={{
-                            color: "#007bff",
-                            "&:hover": {
-                              backgroundColor: "rgba(0, 123, 255, 0.1)",
-                            },
-                          }}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleApprove(row._id)}
-                        >
-                          Approve
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center">
-                      No data found
+                {rows.map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell align="center">{row.recordNo}</TableCell>
+                    <TableCell align="center">
+                      <Box>
+                        <Typography sx={{ fontWeight: "bold", color: "#007bff" }}>
+                          {row.businessName}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Owner Name: {row.ownerName}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Mobile: {row.mobile}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Email: {row.email}
+                        </Typography>
+                        <Typography sx={{ color: "#888" }}>
+                          Location: {row.location}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold", color: "#007bff" }}>
+                      {row.registrationTimeline}
+                    </TableCell>
+                    <TableCell align="center">{row.businessCategory}</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                      <Typography
+                        sx={{
+                          fontSize: "14px",
+                          backgroundColor:
+                            row.documentsStatus === "NO DOCUMENTS UPLOADED"
+                              ? "#f44336"
+                              : "#4caf50",
+                          color: "#fff",
+                          padding: "5px",
+                          borderRadius: "5px",
+                          display: "inline-block",
+                        }}
+                      >
+                        {row.documentsStatus}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "bold", color: "blue" }}>
+                      {row.registeredBy}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button variant="contained" color="primary">
+                        View Details
+                      </Button>
                     </TableCell>
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
+          </Paper>
+
+          {/* Pagination Controls */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 2,
+            }}
+          >
+            <Button
+              onClick={handlePreviousPage}
+              disabled={page <= 1}
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+            >
+              Previous
+            </Button>
+            <Typography sx={{ margin: "0 10px", fontWeight: "bold" }}>
+              Page {page} of {totalPages}
+            </Typography>
+            <Button
+              onClick={handleNextPage}
+              disabled={page >= totalPages}
+              variant="outlined"
+              endIcon={<ArrowForwardIcon />}
+            >
+              Next
+            </Button>
           </Box>
         </Box>
       </Box>
